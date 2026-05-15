@@ -1,0 +1,12 @@
+{
+  "n_files_detected": 16,
+  "n_files_read_success": 12,
+  "n_files_read_failed": 4,
+  "acceptance_check": {
+    "has_discharge_candidate": true,
+    "has_quality_candidate": true,
+    "has_wrtds_candidate": true,
+    "has_attribute_candidate": false,
+    "has_nutrient_input_candidate": false
+  }
+}

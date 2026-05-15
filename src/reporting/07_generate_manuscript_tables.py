@@ -62,7 +62,7 @@ def generate_table1_anomaly_summary(panel: pd.DataFrame):
             row = {
                 "Solute": solute,
                 "Hydrological State": state.replace("_", " ").title(),
-                "N (Station-Months)": len(state_df),
+                "N (Solute-Station-Months)": len(state_df),
                 "CA Median": f"{state_df['CA'].median():.3f}",
                 "CA (25th-75th)": f"[{state_df['CA'].quantile(0.25):.3f}, {state_df['CA'].quantile(0.75):.3f}]",
                 "FA Median": f"{state_df['FA'].median():.3f}",
@@ -100,14 +100,14 @@ def generate_table2_archetype_profiles(centers: pd.DataFrame):
     centers.rename(columns={
         "solute": "Solute",
         "Archetype": "Class ID",
-        "CA_rewet": "CA Pulse (Median)",
+        "CA_rewet": "CA during Rewetting (Median)",
         "FA_rewet": "FA Export (Median)",
         "Delta_Beta": "Δβ (c-Q Shift)",
-        "Delta_CV_Ratio": "ΔCVc/CVq (Source Shift)"
+        "Delta_CV_Ratio": "ΔCVc/CVq (ΔCV Ratio)"
     }, inplace=True)
 
     # 保留 3 位小数
-    for col in ["CA Pulse (Median)", "FA Export (Median)", "Δβ (c-Q Shift)", "ΔCVc/CVq (Source Shift)"]:
+    for col in ["CA during Rewetting (Median)", "FA Export (Median)", "Δβ (c-Q Shift)", "ΔCVc/CVq (ΔCV Ratio)"]:
         centers[col] = centers[col].apply(lambda x: f"{x:.3f}")
 
     centers.to_csv(OUT_TABLE2, index=False, encoding="utf-8-sig")

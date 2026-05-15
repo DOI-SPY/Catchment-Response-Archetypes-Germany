@@ -22,17 +22,46 @@ OUT_SLOPES = FINAL_DIR / "catchment_cq_slopes_matrix.csv"
 # =========================================================
 def calculate_anomalies(df: pd.DataFrame) -> pd.DataFrame:
     """
-    计算浓度异常 (CA) 和通量异常 (FA)
-    公式: CA = ln(mean_C / mean_FNC)
+    Calculate monthly WRTDS-supported concentration and flux anomalies.
+
+    CA is defined as:
+
+        CA = ln(mean_C / mean_FNC)
+
+    where:
+        mean_C:
+            monthly mean WRTDS-estimated concentration
+
+        mean_FNC:
+            monthly mean WRTDS flow-normalized concentration
+
+    FA is defined as:
+
+        FA = ln(mean_Flux / mean_FNFlux)
+
+    These anomalies are diagnostic deviations from WRTDS-derived
+    flow-normalized baselines. They should not be interpreted as direct
+    observations of event-scale concentration peaks or storm-pulse flushing.
     """
-    print("正在计算浓度异常 (CA) 与通量异常 (FA)...")
+    print(
+        "Calculating monthly WRTDS-supported concentration anomalies (CA) "
+        "and flux anomalies (FA)..."
+    )
+
     out = df.copy()
 
+    out["CA"] = np.nan
+    out["FA"] = np.nan
+
     mask_c = (out["mean_C"] > 0) & (out["mean_FNC"] > 0)
-    out.loc[mask_c, "CA"] = np.log(out.loc[mask_c, "mean_C"] / out.loc[mask_c, "mean_FNC"])
+    out.loc[mask_c, "CA"] = np.log(
+        out.loc[mask_c, "mean_C"] / out.loc[mask_c, "mean_FNC"]
+    )
 
     mask_f = (out["mean_Flux"] > 0) & (out["mean_FNFlux"] > 0)
-    out.loc[mask_f, "FA"] = np.log(out.loc[mask_f, "mean_Flux"] / out.loc[mask_f, "mean_FNFlux"])
+    out.loc[mask_f, "FA"] = np.log(
+        out.loc[mask_f, "mean_Flux"] / out.loc[mask_f, "mean_FNFlux"]
+    )
 
     return out
 
@@ -80,7 +109,14 @@ def calculate_state_dependent_cq_slopes(df: pd.DataFrame) -> pd.DataFrame:
         })
 
     # 按站点、溶质、状态进行分组计算
-    slopes = valid_data.groupby(["OBJECTID", "solute", "hydro_state"]).apply(ols_slope_and_cv).reset_index()
+    group_cols = ["OBJECTID", "solute", "hydro_state"]
+    value_cols = ["log_mean_C", "log_mean_Q", "mean_C", "mean_Q"]
+
+    slopes = (
+        valid_data.groupby(group_cols, group_keys=False)[value_cols]
+        .apply(ols_slope_and_cv)
+        .reset_index()
+    )
 
     # 宽表转换
     slopes_pivot = slopes.pivot(
